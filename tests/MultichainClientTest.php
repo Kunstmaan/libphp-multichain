@@ -137,9 +137,10 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateRawExchange(){
         $address1 = $this->multichain->getNewAddress();
-        $assetInfo = $this->createTestAsset($address1);
-        $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
-        $this->multichain->setDebug(true)->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $assetInfo1 = $this->createTestAsset($address1);
+        $assetInfo2 = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo1["name"] => 123));
+        $this->multichain->setDebug(true)->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo2["name"] => 100));
     }
 
     /**
@@ -153,15 +154,32 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      * verbose is true then all of the individual stages in the exchange are listed. Other fields relating to fees are
      * only relevant for blockchains which use a native currency.
      *
-     * @group test
+     * @group exchange
      */
     public function testDecodeRawExchange(){
         $address1 = $this->multichain->getNewAddress();
-        $assetInfo = $this->createTestAsset($address1);
-        $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
-        $hexString = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $assetInfo1 = $this->createTestAsset($address1);
+        $assetInfo2 = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo1["name"] => 123));
+        $hexString = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo2["name"] => 100));
         $this->multichain->setDebug(true)->decodeRawExchange($hexString, true);
 
+    }
+
+    /**
+     * Sends a transaction to disable the offer of exchange in hexstring, returning the txid. This is achieved by
+     * spending one of the exchange transaction’s inputs and sending it back to the wallet. To check whether this can
+     * be used on an exchange transaction, check the candisable field of the output of decoderawexchange.
+     *
+     * @group exchange
+     */
+    public function testDisableRawTransaction(){
+        $address1 = $this->multichain->getNewAddress();
+        $assetInfo1 = $this->createTestAsset($address1);
+        $assetInfo2 = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo1["name"] => 123));
+        $hexString = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo2["name"] => 100));
+        $this->multichain->setDebug(true)->disableRawTransaction($hexString);
     }
 
     /**
@@ -187,9 +205,10 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testAppendRawMetadata(){
         $address1 = $this->multichain->getNewAddress();
-        $assetInfo = $this->createTestAsset($address1);
-        $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
-        $txHex = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $assetInfo1 = $this->createTestAsset($address1);
+        $assetInfo2 = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo1["name"] => 123));
+        $txHex = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo2["name"] => 100));
         $this->multichain->setDebug(true)->appendRawMetadata($txHex, "fakemetadata");
     }
 
@@ -205,6 +224,18 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCombineUnspent(){
         //$this->multichain->setDebug(true)->combineUnspent();
+    }
+
+    /**
+     * Returns a list of all the asset balances for address in this node’s wallet, with at least minconf confirmations.
+     * Use includeLocked to include unspent outputs which have been locked, e.g. by a call to preparelockunspent.
+     *
+     * @group address
+     */
+    public function testGetAddressBalances(){
+        $address1 = $this->multichain->getNewAddress();
+        $this->createTestAsset($address1);
+        $this->multichain->setDebug(true)->getAddressBalances($address1);
     }
 
     /**
