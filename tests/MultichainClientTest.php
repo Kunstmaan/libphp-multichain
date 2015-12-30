@@ -266,17 +266,27 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Returns a list of all the asset balances for account in this node’s wallet, with at least minconf confirmations.
+     * Omit the account parameter or use "" for the default account – see note about accounts. Use includeWatchOnly to
+     * include the balance of watch-only addresses and includeLocked to include unspent outputs which have been locked,
+     * e.g. by a call to preparelockunspent.
+     *
+     * @group test
+     */
+    public function testGetAssetBalances(){
+        $this->multichain->setDebug(true)->getAssetBalances();
+    }
+
+    /**
+     * Returns a list of all the parameters of this blockchain, reflecting the content of its params.dat file.
+     *
      * @group info
      */
     public function testGetBlockchainParams()
     {
-        $params = $this->multichain->getBlockchainParams();
+        $this->multichain->setDebug(true)->getBlockchainParams();
     }
-
-
-
-
-
+    
     /**
      * @group asset
      */
