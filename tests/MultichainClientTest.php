@@ -288,6 +288,11 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     }
     
     /**
+     * Creates a new asset name on the blockchain, sending the initial qty units to address. The smallest transactable
+     * unit is given by units, e.g. 0.01. If the chain uses a native currency, you can send some with the new asset
+     * using the native-amount parameter. Returns the txid of the issuance transaction. For more information, see
+     * native assets.
+     *
      * @group asset
      */
     public function testIssue()
@@ -296,23 +301,31 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $name = uniqid("asset");
         $issueQty = 1000000;
         $units = 0.01;
-        $asset = $this->multichain->issue($address, $name, $issueQty, $units);
+        $this->multichain->issue($address, $name, $issueQty, $units);
     }
 
-
     /**
+     * Returns information about all assets issued on the blockchain. If an asset name, ref or issuance txid (see
+     * native assets) is provided in asset, then information is only returned about that one asset.
+     *
      * @group asset
      */
     public function testListAssets()
     {
-        $assets = $this->multichain->listAssets();
+        $this->multichain->listAssets();
     }
 
     /**
+     * Lists information about the count most recent transactions in this node’s wallet, including how they affected
+     * the node’s total balance. Use skip to go back further in history and includeWatchOnly to consider watch-only
+     * addresses as if they belong to this wallet. Use verbose to provide the details of transaction inputs and
+     * outputs. Note that unlike Bitcoin Core’s listtransactions command, the response contains one element per
+     * transaction, rather than one per transaction output.
+     *
      * @group transaction
      */
     public function testListWalletTransactions()
     {
-        $transactions = $this->multichain->listWalletTransactions(10, 0, false, false);
+        $this->multichain->listWalletTransactions(10, 0, false, false);
     }
 }
