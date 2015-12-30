@@ -1,9 +1,9 @@
 {
-  "name": "kunstmaan/multichain-api",
-  "description": "A fully featured SDK for performing operations on Multichain",
+  "name": "kunstmaan/libphp-multichain",
+  "description": "Unofficial PHP library for interacting with the Multichain JsonRPC interface",
   "require": {
     "php": ">=5.4.0",
-    "fguillot/json-rpc": "dev-master"
+    "fguillot/json-rpc": "@stable"
   },
   "require-dev": {
     "phpunit/phpunit": "@stable"
