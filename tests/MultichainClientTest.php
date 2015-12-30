@@ -71,7 +71,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      * Use "" as the asset inside this object to specify a quantity of the native blockchain currency. See also
      * sendassettoaddress for sending a single asset and sendfromaddress to control the address whose funds are used.
      *
-     * @group send
+     * @group transaction
      */
     public function testSendToAddress(){
         $address1 = $this->multichain->getNewAddress();
@@ -238,6 +238,33 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $this->multichain->setDebug(true)->getAddressBalances($address1);
     }
 
+
+    /**
+     * Returns a list of addresses in this node’s wallet. Set verbose to true to get more information about each
+     * address, formatted like the output of the validateaddress command.
+     *
+     * @group address
+     */
+    public function testGetAddresses()
+    {
+         $this->multichain->setDebug(true)->getAddresses(true);
+    }
+
+    /**
+     * Provides information about transaction txid related to address in this node’s wallet, including how it affected
+     * that address’s balance. Use verbose to provide details of transaction inputs and outputs.
+     *
+     * @group address
+     * @group transaction
+     */
+    public function testGetAddressTransaction(){
+        $address1 = $this->multichain->getNewAddress();
+        $address2 = $this->multichain->getNewAddress();
+        $assetInfo = $this->createTestAsset($address1);
+        $txId = $this->multichain->sendToAddress($address2, array($assetInfo["name"] => 100));
+        $this->multichain->setDebug(true)->getAddressTransaction($address2, $txId, true);
+    }
+
     /**
      * @group info
      */
@@ -249,13 +276,6 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
 
 
 
-    /**
-     * @group address
-     */
-    public function testGetAddresses()
-    {
-        $addresses = $this->multichain->getAddresses(true);
-    }
 
     /**
      * @group asset
