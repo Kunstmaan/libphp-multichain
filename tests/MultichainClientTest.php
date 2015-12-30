@@ -1,6 +1,7 @@
 <?php
 
 use be\kunstmaan\multichain\MultichainClient;
+use be\kunstmaan\multichain\MultichainHelper;
 
 class MultichainClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -8,9 +9,13 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     /** @var MultichainClient */
     protected $multichain;
 
+    /** @var  MultichainHelper */
+    protected $helper;
+
     protected function setUp()
     {
         $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3, true);
+        $this->helper = new MultichainHelper($this->multichain);
     }
 
     /**
@@ -30,6 +35,29 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group address
+     */
+    public function testGetNewAddress()
+    {
+        $address = $this->multichain->getNewAddress();
+    }
+
+    /**
+     * @group send
+     */
+    public function testSendToAddress(){
+        $address1 = $this->multichain->getNewAddress();
+        $address2 = $this->multichain->getNewAddress();
+        $name = uniqid("asset");
+        $issueQty = 1000000;
+        $units = 0.01;
+        $asset = $this->multichain->issue($address1, $name, $issueQty, $units);
+        $this->helper->waitForAssetAvailability($asset);
+        $this->multichain->sendToAddress($address2, array($name => 100));
+    }
+
+
+    /**
      * @group info
      */
     public function testHelp()
@@ -45,13 +73,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $params = $this->multichain->getBlockchainParams();
     }
 
-    /**
-     * @group address
-     */
-    public function testGetNewAddress()
-    {
-        $address = $this->multichain->getNewAddress();
-    }
+
 
     /**
      * @group address
