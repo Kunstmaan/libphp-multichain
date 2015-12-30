@@ -16,5 +16,8 @@ before_script:
   - composer selfupdate
   - sh -c 'if [ "$TRAVIS_PHP_VERSION" != "hhvm-nightly" ]; then echo "memory_limit = -1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini; fi;'
   - COMPOSER_ROOT_VERSION=dev-master composer --prefer-source --dev install
+  - wget https://scrutinizer-ci.com/ocular.phar
 
-script: bin/phpunit --bootstrap vendor/autoload.php tests/ --verbose --colors=always --debug
+script: 
+  - bin/phpunit --bootstrap vendor/autoload.php tests/ --verbose --colors=always --debug  || ./vendor/bin/phpunit --coverage-clover=coverage.clover
+  - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
