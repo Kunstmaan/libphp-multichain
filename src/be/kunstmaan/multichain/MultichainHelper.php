@@ -16,20 +16,30 @@ class MultichainHelper
     }
 
     /**
-     * @param $asset
+     * @param $assetTxId
      * @return bool
      */
-    public function isAssetAvailable($asset){
-        $assetInfo = $this->multichain->listAssets($asset);
-        return !is_null($assetInfo[0]["assetref"]);
+    public function isAssetAvailable($assetTxId){
+        $assetInfo = $this->getAssetInfoFromTxId($assetTxId);
+        return !is_null($assetInfo["assetref"]);
     }
 
     /**
-     * @param $asset
+     * @param $assetTxId
      */
-    public function waitForAssetAvailability($asset){
-        while (!$this->isAssetAvailable($asset)){
+    public function waitForAssetAvailability($assetTxId){
+        while (!$this->isAssetAvailable($assetTxId)){
             sleep(1);
         }
     }
+
+    /**
+     * @param $assetTxId
+     * @return mixed
+     */
+    public function getAssetInfoFromTxId($assetTxId){
+        $assetInfo = $this->multichain->listAssets($assetTxId);
+        return $assetInfo[0];
+    }
+
 }

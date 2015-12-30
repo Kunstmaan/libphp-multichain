@@ -134,16 +134,6 @@ class MultichainClient
     }
 
     /**
-     * Shuts down the this blockchain node, i.e. stops the multichaind process.
-     *
-     * @return mixed
-     */
-    public function stop()
-    {
-        return $this->jsonRPCClient->execute("stop");
-    }
-
-    /**
      * Adds to the atomic exchange transaction in hexstring given by a previous call to createrawexchange or
      * appendrawexchange. This adds an offer to exchange the asset/s in output vout of transaction txid for qty units
      * of asset, where asset is an asset name, ref or issuance txid. The txid and vout should generally be taken from
