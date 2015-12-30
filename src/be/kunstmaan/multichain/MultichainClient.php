@@ -43,6 +43,7 @@ class MultichainClient
      * @param  string $username Multichain JSON RPC username
      * @param  string $password Multichain JSON RPC password
      * @param  integer $timeout HTTP timeout
+     * @param bool $debug
      */
     public function __construct($url, $username, $password, $timeout = 3, $debug = false)
     {
@@ -307,16 +308,6 @@ class MultichainClient
     }
 
     /**
-     * Returns a list of all the parameters of this blockchain, reflecting the content of its params.dat file.
-     *
-     * @return mixed
-     */
-    public function getBlockchainParams()
-    {
-        return $this->jsonRPCClient->execute("getblockchainparams");
-    }
-
-    /**
      * Returns a list of all the asset balances in this node’s wallet, with at least minconf confirmations. Use
      * includeWatchOnly to include the balance of watch-only addresses and includeLocked to include unspent outputs
      * which have been locked, e.g. by a call to preparelockunspent.
@@ -393,7 +384,7 @@ class MultichainClient
      */
     public function grantFrom($fromAddress, $toAddresses, $permissions, $nativeAmount = 0, $comment = '', $commentTo = '', $startBlock = 0, $endBlock = null)
     {
-        return $this->jsonRPCClient->execute("grantfrom", array($fromAddress, $toAddresses, $nativeAmount, $comment, $commentTo, $startBlock, $endBlock));
+        return $this->jsonRPCClient->execute("grantfrom", array($fromAddress, $toAddresses, $permissions, $nativeAmount, $comment, $commentTo, $startBlock, $endBlock));
     }
 
     /**
@@ -412,7 +403,7 @@ class MultichainClient
     public function issue($address, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null)
     {
         $params = array($address, $name, $qty, $units, $nativeAmount);
-        if (!is_null($custom)){
+        if (!is_null($custom)) {
             $params[] = $custom;
         }
         return $this->jsonRPCClient->execute("issue", $params);
@@ -482,7 +473,6 @@ class MultichainClient
         return $this->jsonRPCClient->execute("listpermissions", array($permissions, $addresses, $verbose));
     }
 
-
     /**
      * Lists information about the count most recent transactions in this node’s wallet, including how they affected
      * the node’s total balance. Use skip to go back further in history and includeWatchOnly to consider watch-only
@@ -499,5 +489,266 @@ class MultichainClient
     public function listWalletTransactions($count = 10, $skip = 0, $includeWatchOnly = false, $verbose = false)
     {
         return $this->jsonRPCClient->execute("listwallettransactions", array($count, $skip, $includeWatchOnly, $verbose));
+    }
+
+    /**
+     * Prepares an unspent transaction output (useful for building atomic exchange transactions) containing qty units
+     * of asset, where asset is an asset name, ref or issuance txid. Multiple items can be specified within the first
+     * parameter to include several assets within the output. The output will be locked against automatic selection for
+     * spending unless the optional lock parameter is set to false. Returns the txid and vout of the prepared output.
+     *
+     * @param $assetsToLock
+     * @param bool $lock
+     * @return mixed
+     */
+    public function prepareLockUnspent($assetsToLock, $lock = true)
+    {
+        return $this->jsonRPCClient->execute("preparelockunspent", array($assetsToLock, $lock));
+    }
+
+    /**
+     * This works like preparelockunspent, but with control over the from-address whose funds are used to prepare the
+     * unspent transaction output. Any change from the transaction is send back to from-address.
+     *
+     * @param $fromAddress
+     * @param $assetsToLock
+     * @param bool $lock
+     * @return mixed
+     */
+    public function prepareLockUnspentFrom($fromAddress, $assetsToLock, $lock = true)
+    {
+        return $this->jsonRPCClient->execute("preparelockunspentfrom", array($fromAddress, $assetsToLock, $lock));
+    }
+
+    /**
+     * Revokes permissions from addresses, where addresses is a comma-separated list of addresses and permissions is
+     * one of connect, send, receive, issue, mine, admin, or a comma-separated list thereof. Equivalent to calling
+     * grant with start-block=0 and end-block=0. Returns the txid of transaction revoking the permissions. For more
+     * information, see permissions management.
+     *
+     * @param $addresses
+     * @param $permissions
+     * @param int $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @return mixed
+     */
+    public function revoke($addresses, $permissions, $nativeAmount = 0, $comment = '', $commentTo = '')
+    {
+        return $this->jsonRPCClient->execute("revoke", array($addresses, $permissions, $nativeAmount, $comment, $commentTo));
+    }
+
+    /**
+     * This works like revoke, but with control over the from-address used to revoke the permissions. If there are
+     * multiple addresses with administrator permissions on one node, this allows control over which address is used.
+     *
+     * @param $fromAddress
+     * @param $toAddresses
+     * @param $permissions
+     * @param int $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @return mixed
+     */
+    public function revokeFrom($fromAddress, $toAddresses, $permissions, $nativeAmount = 0, $comment = '', $commentTo = '')
+    {
+        return $this->jsonRPCClient->execute("revokefrom", array($fromAddress, $toAddresses, $permissions, $nativeAmount, $comment, $commentTo));
+    }
+
+    /**
+     * This works like sendassettoaddress, but with control over the from-address whose funds are used. Any change from
+     * the transaction is sent back to from-address. See also sendfromaddress for sending multiple assets in one
+     * transaction.
+     *
+     * @param $fromAddress
+     * @param $toAddress
+     * @param $asset
+     * @param $qty
+     * @param null $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @return mixed
+     */
+    public function sendAssetFrom($fromAddress, $toAddress, $asset, $qty, $nativeAmount = null, $comment = '', $commentTo = '')
+    {
+        $nativeAmount = $this->findDefaultMinimumPerOutput($nativeAmount);
+        return $this->jsonRPCClient->execute("sendassetfrom", array($fromAddress, $toAddress, $asset, $qty, $nativeAmount, $comment, $commentTo));
+    }
+
+    /**
+     * Returns a list of all the parameters of this blockchain, reflecting the content of its params.dat file.
+     *
+     * @return mixed
+     */
+    public function getBlockchainParams()
+    {
+        return $this->jsonRPCClient->execute("getblockchainparams");
+    }
+
+    /**
+     * Sends qty of asset to address, returning the txid. The asset can be specified using its name, ref or issuance
+     * txid – see native assets for more information. See also sendassetfrom to control the address whose funds are
+     * used, sendtoaddress for sending multiple assets in one transaction, and sendfromaddress to combine both of these.
+     *
+     * @param $address
+     * @param $asset
+     * @param $qty
+     * @param null $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @return mixed
+     */
+    public function sendAssetToAddress($address, $asset, $qty, $nativeAmount = null, $comment = '', $commentTo = '')
+    {
+        $nativeAmount = $this->findDefaultMinimumPerOutput($nativeAmount);
+        return $this->jsonRPCClient->execute("sendassettoaddress", array($address, $asset, $qty, $nativeAmount, $comment, $commentTo));
+    }
+
+    /**
+     * This works like sendtoaddress, but with control over the from-address whose funds are used. Any
+     * change from the transaction is sent back to from-address.
+     *
+     * @param $fromAddress
+     * @param $toAddress
+     * @param $amount
+     * @param string $comment
+     * @param string $commentTo
+     * @return mixed
+     */
+    public function sendFromAddress($fromAddress, $toAddress, $amount, $comment = '', $commentTo = '')
+    {
+        return $this->jsonRPCClient->execute("sendfromaddress", array($fromAddress, $toAddress, $amount, $comment, $commentTo));
+    }
+
+    /**
+     * This works like sendtoaddress (listed above), but includes the data-hex hexadecimal metadata in an additional
+     * OP_RETURN transaction output.
+     *
+     * @param $address
+     * @param $amount
+     * @param $dataHex
+     * @return mixed
+     */
+    public function sendWithMetadata($address, $amount, $dataHex)
+    {
+        return $this->jsonRPCClient->execute("sendwithmetadata", array($address, $amount, $dataHex));
+    }
+
+    /**
+     * This works like sendtoaddress (listed above), but with control over the from-address whose funds are used, and
+     * with the data-hex hexadecimal metadata added in an additional OP_RETURN transaction output. Any change from the
+     * transaction is sent back to from-address.
+     *
+     * @param $fromAddress
+     * @param $toAddress
+     * @param $amount
+     * @param $dataHex
+     * @return mixed
+     */
+    public function sendWithMetadataFrom($fromAddress, $toAddress, $amount, $dataHex)
+    {
+        return $this->jsonRPCClient->execute("sendwithmetadatafrom", array($fromAddress, $toAddress, $amount, $dataHex));
+    }
+
+    /**
+     * Creates a transaction spending the specified inputs, sending to the given addresses. In Bitcoin Core, each
+     * amount field is a quantity of the bitcoin currency. For MultiChain, an {"asset":qty, ...} object can be used for
+     * amount, in which each asset is an asset name, ref or issuance txid, and each qty is the quantity of that asset
+     * to send (see native assets). Use "" as the asset inside this object to specify a quantity of the native
+     * blockchain currency.
+     *
+     * @param $inputs
+     * @param $addresses
+     * @return mixed
+     */
+    public function createRawTransaction($inputs, $addresses)
+    {
+        return $this->jsonRPCClient->execute("createrawtransaction", array($inputs, $addresses));
+    }
+
+    /**
+     * Returns a JSON object describing the serialized transaction in hexstring. For a MultiChain blockchain, each
+     * transaction output includes assets and permissions fields listing any assets or permission changes encoded
+     * within that output. There will also be a data field listing the content of any OP_RETURN outputs in the
+     * transaction.
+     *
+     * @param $hexString
+     * @return mixed
+     */
+    public function decodeRawTransaction($hexString)
+    {
+        return $this->jsonRPCClient->execute("decoderawtransaction", array($hexString));
+    }
+
+    /**
+     * Returns information about the block with hash. If this is a MultiChain blockchain and format is true or omitted,
+     * then the output includes a field miner showing the address of the miner of the block.
+     *
+     * @param $hash
+     * @param bool $format
+     * @return mixed
+     */
+    public function getBlock($hash, $format = true)
+    {
+        return $this->jsonRPCClient->execute("getblock", array($hash, $format));
+    }
+
+    /**
+     * If verbose is 1, returns a JSON object describing transaction txid. For a MultiChain blockchain, each transaction
+     * output includes assets and permissions fields listing any assets or permission changes encoded within that
+     * output. There will also be a data field listing the content of any OP_RETURN outputs in the transaction.
+     *
+     * @param $txId
+     * @param int $verbose
+     * @return mixed
+     */
+    public function getRawTransaction($txId, $verbose = 0)
+    {
+        return $this->jsonRPCClient->execute("getrawtransaction", array($txId, $verbose));
+    }
+
+    /**
+     * Returns details about an unspent transaction output vout of txid. For a MultiChain blockchain, includes assets
+     * and permissions fields listing any assets or permission changes encoded within the output. Set confirmed to true
+     * to include unconfirmed transaction outputs.
+     *
+     * @param $txId
+     * @param $vOut
+     * @param bool $unconfirmed
+     * @return mixed
+     */
+    public function getTxOut($txId, $vOut, $unconfirmed = false)
+    {
+        return $this->jsonRPCClient->execute("gettxout", array($txId, $vOut, $unconfirmed));
+    }
+
+    /**
+     * Returns a list of unspent transaction outputs in the wallet, with between minconf and maxconf confirmations. For
+     * a MultiChain blockchain, each transaction output includes assets and permissions fields listing any assets or
+     * permission changes encoded within that output. If addresses is provided, only outputs which pay an address in
+     * this array will be included.
+     *
+     * @param int $minConf
+     * @param int $maxConf
+     * @param null $addresses
+     * @return mixed
+     */
+    public function listUnspent($minConf = 1, $maxConf = 999999, $addresses = null)
+    {
+        return $this->jsonRPCClient->execute("listunspent", array($minConf, $maxConf, $addresses));
+    }
+
+    /**
+     * @param $nativeAmount
+     * @return mixed
+     */
+    private function findDefaultMinimumPerOutput($nativeAmount)
+    {
+        if (is_null($nativeAmount)) {
+            $blockchainParams = $this->getBlockchainParams();
+            $nativeAmount = $blockchainParams["minimum-per-output"];
+            return $nativeAmount;
+        }
+        return $nativeAmount;
     }
 }

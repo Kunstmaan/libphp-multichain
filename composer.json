@@ -1,12 +1,6 @@
 {
   "name": "kunstmaan/multichain-api",
   "description": "A fully featured SDK for performing operations on Multichain",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/roderik/JsonRPC.git"
-    }
-  ],
   "require": {
     "php": ">=5.4.0",
     "fguillot/json-rpc": "dev-master"
