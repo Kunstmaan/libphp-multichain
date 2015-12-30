@@ -12,9 +12,9 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     /** @var  MultichainHelper */
     protected $helper;
 
-    protected function setUp()
+    public function setUp()
     {
-        $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3, true);
+        $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3, false);
         $this->helper = new MultichainHelper($this->multichain);
     }
 
@@ -28,7 +28,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetInfo()
     {
-        $info = $this->multichain->getInfo();
+        $info = $this->multichain->setDebug(true)->getInfo();
     }
 
     /**
@@ -40,7 +40,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetPeerInfo()
     {
-        $peers = $this->multichain->getPeerInfo();
+        $peers = $this->multichain->setDebug(true)->getPeerInfo();
     }
 
     /**
@@ -51,7 +51,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetNewAddress()
     {
-        $address = $this->multichain->getNewAddress();
+        $address = $this->multichain->setDebug(true)->getNewAddress();
     }
 
     /**
@@ -61,7 +61,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testHelp()
     {
-        $help = $this->multichain->help();
+        $help = $this->multichain->setDebug(true)->help();
     }
 
     /**
@@ -77,7 +77,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $address1 = $this->multichain->getNewAddress();
         $address2 = $this->multichain->getNewAddress();
         $assetInfo = $this->createTestAsset($address1);
-        $this->multichain->sendToAddress($address2, array($assetInfo["name"] => 100));
+        $this->multichain->setDebug(true)->sendToAddress($address2, array($assetInfo["name"] => 100));
     }
 
     /**
@@ -102,7 +102,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     public function testValidateAddress()
     {
         $address = $this->multichain->getNewAddress();
-        $validate = $this->multichain->validateAddress($address);
+        $this->multichain->setDebug(true)->validateAddress($address);
     }
 
     /**
@@ -122,7 +122,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $assetInfo = $this->createTestAsset($address1);
         $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
         $hexString = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
-        $this->multichain->appendRawExchange($hexString, $lock["txid"], $lock["vout"], array($assetInfo["name"] => 10));
+        $this->multichain->setDebug(true)->appendRawExchange($hexString, $lock["txid"], $lock["vout"], array($assetInfo["name"] => 10));
     }
 
     /**
@@ -139,7 +139,29 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $address1 = $this->multichain->getNewAddress();
         $assetInfo = $this->createTestAsset($address1);
         $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
-        $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $this->multichain->setDebug(true)->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+    }
+
+    /**
+     * Decodes the raw exchange transaction in hexstring, given by a previous call to createrawexchange or
+     * appendrawexchange. Returns details on the offer represented by the exchange and its present state. The offer
+     * field in the response lists the quantity of native currency and/or assets which are being offered for exchange.
+     * The ask field lists the native currency and/or assets which are being asked for. The candisable field specifies
+     * whether this wallet can disable the exchange transaction by double-spending against one of its inputs. The
+     * cancomplete field specifies whether this wallet has the assets required to complete the exchange. The
+     * complete field specifies whether the exchange is already complete (i.e. balanced) and ready for sending. If
+     * verbose is true then all of the individual stages in the exchange are listed. Other fields relating to fees are
+     * only relevant for blockchains which use a native currency.
+     *
+     * @group test
+     */
+    public function testDecodeRawExchange(){
+        $address1 = $this->multichain->getNewAddress();
+        $assetInfo = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
+        $hexString = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $this->multichain->setDebug(true)->decodeRawExchange($hexString, true);
+
     }
 
     /**
@@ -153,7 +175,36 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     public function testPrepareLockUnspent(){
         $address1 = $this->multichain->getNewAddress();
         $assetInfo = $this->createTestAsset($address1);
-        $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
+        $this->multichain->setDebug(true)->prepareLockUnspent(array($assetInfo["name"] => 123));
+    }
+
+    /**
+     * Adds a metadata output to the raw transaction in tx-hex given by a previous call to createrawtransaction. The
+     * metadata is specified in data-hex in hexadecimal form and added in a new OP_RETURN transaction output. The
+     * transaction can then be signed and transmitted to the network using signrawtransaction and sendrawtransaction.
+     *
+     * @group metadata
+     */
+    public function testAppendRawMetadata(){
+        $address1 = $this->multichain->getNewAddress();
+        $assetInfo = $this->createTestAsset($address1);
+        $lock = $this->multichain->prepareLockUnspent(array($assetInfo["name"] => 123));
+        $txHex = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo["name"] => 100));
+        $this->multichain->setDebug(true)->appendRawMetadata($txHex, "fakemetadata");
+    }
+
+    /**
+     * Sends transactions to combine large groups of unspent outputs (UTXOs) belonging to the same address into a
+     * single unspent output, returning a list of txids. This can improve wallet performance, especially for miners in
+     * a chain with short block times and non-zero block rewards. Set addresses to a comma-separated list of addresses
+     * to combine outputs for, or * for all addresses in the wallet. Only combine outputs with at least minconf
+     * confirmations, and use between mininputs and maxinputs per transaction. A single call to combineunspent can
+     * create up to maxcombines transactions over up to maxtime seconds. See also the autocombine runtime parameters.
+     *
+     * @group operations
+     */
+    public function testCombineUnspent(){
+        //$this->multichain->setDebug(true)->combineUnspent();
     }
 
     /**

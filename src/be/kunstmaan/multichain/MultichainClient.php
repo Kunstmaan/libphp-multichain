@@ -45,12 +45,21 @@ class MultichainClient
      * @param  integer $timeout HTTP timeout
      * @param bool $debug
      */
-    public function __construct($url, $username, $password, $timeout = 3, $debug = false)
+    public function __construct($url, $username, $password, $timeout = 3)
     {
         $this->jsonRPCClient = new JsonRPCClient($url, $timeout, $this->headers);
+        $this->jsonRPCClient->authentication($username, $password);
+    }
+
+    /**
+     * @param boolean $debug
+     * @return MultichainClient
+     */
+    public function setDebug($debug)
+    {
         $this->debug = $debug;
         $this->jsonRPCClient->debug = $debug;
-        $this->jsonRPCClient->authentication($username, $password);
+        return $this;
     }
 
     /**
