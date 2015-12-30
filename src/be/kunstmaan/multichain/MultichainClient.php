@@ -2,12 +2,14 @@
 
 namespace be\kunstmaan\multichain;
 
-use be\kunstmaan\multichain\entities\Address;
-use be\kunstmaan\multichain\entities\Asset;
-use be\kunstmaan\multichain\entities\Info;
-use be\kunstmaan\multichain\entities\PeerInfo;
 use JsonRPC\Client as JsonRPCClient;
 
+/**
+ * Class MultichainClient
+ *
+ * @package be\kunstmaan\multichain
+ * @link http://www.multichain.com/developers/json-rpc-api/
+ */
 class MultichainClient
 {
 
@@ -24,7 +26,7 @@ class MultichainClient
      * @var array
      */
     private $headers = array(
-        'User-Agent: Unofficial Multichain PHP Client <https://github.com/kunstmaan/php-multichain>',
+        'User-Agent: Unofficial Multichain PHP Client <https://github.com/kunstmaan/libphp-multichain>',
     );
 
     /**
@@ -56,34 +58,11 @@ class MultichainClient
      * gives the length in blocks of the setup phase in which some consensus constraints are not applied. The
      * nodeaddress can be passed to other nodes for connecting.
      *
-     * @link http://www.multichain.com/developers/json-rpc-api/
+     * @return mixed
      */
     public function getInfo()
     {
-        $response = $this->jsonRPCClient->execute("getinfo");
-        $info = new Info();
-        $info->setVersion($response["version"])
-            ->setProtocolVersion($response["protocolversion"])
-            ->setChainName($response["chainname"])
-            ->setDescription($response["description"])
-            ->setProtocol($response["protocol"])
-            ->setPort($response["port"])
-            ->setSetupBlocks($response["setupblocks"])
-            ->setNodeAddress($response["nodeaddress"])
-            ->setWalletVersion($response["walletversion"])
-            ->setBalance($response["balance"])
-            ->setBlocks($response["blocks"])
-            ->setTimeOffset($response["timeoffset"])
-            ->setConnections($response["connections"])
-            ->setProxy($response["proxy"])
-            ->setDifficulty($response["difficulty"])
-            ->setTestNet($response["testnet"])
-            ->setKeyPoolOldest($response["keypoololdest"])
-            ->setKeyPoolSize($response["keypoolsize"])
-            ->setPayTxFee($response["paytxfee"])
-            ->setRelayFee($response["relayfee"])
-            ->setErrors($response["errors"]);
-        return $info;
+        return $this->jsonRPCClient->execute("getinfo");
     }
 
     /**
@@ -91,45 +70,17 @@ class MultichainClient
      * includes handshake and handshakelocal fields showing the remote and local address used during the handshaking
      * for that connection.
      *
-     * @return PeerInfo[]
-     * @link http://www.multichain.com/developers/json-rpc-api/
+     * @return mixed
      */
     public function getPeerInfo()
     {
-        $response = $this->jsonRPCClient->execute("getpeerinfo");
-        $peers = array();
-        foreach ($response as $peer) {
-            $peerInfo = new PeerInfo();
-            $peerInfo->setId($peer["id"])
-                ->setAddr($peer["addr"])
-                ->setServices($peer["services"])
-                ->setLastSend($peer["lastsend"])
-                ->setLastRecv($peer["lastrecv"])
-                ->setBytesSent($peer["bytessent"])
-                ->setBytesRecv($peer["bytesrecv"])
-                ->setConnTime($peer["conntime"])
-                ->setPingTime($peer["pingtime"])
-                ->setVersion($peer["version"])
-                ->setSubVer($peer["subver"])
-                ->setHandshakeLocal($peer["handshakelocal"])
-                ->setHandshake($peer["handshake"])
-                ->setInbound($peer["inbound"])
-                ->setStartingHeight($peer["startingheight"])
-                ->setBanScore($peer["banscore"])
-                ->setSyncedHeaders($peer["synced_headers"])
-                ->setSyncedBlocks($peer["synced_blocks"])
-                ->setInFlight($peer["inflight"])
-                ->setWhiteListed($peer["whitelisted"]);
-            $peers[] = $peerInfo;
-        }
-        return $peers;
+        return $this->jsonRPCClient->execute("getpeerinfo");
     }
 
     /**
-     * Returns a new address for receiving payments. The account parameter is ommitted by default.
+     * Returns a new address for receiving payments. Omit the account parameter for the default account – see note below
      *
-     * The account parameter is ommitted by default because:
-     *
+     * NOTE:
      * Bitcoin Core has a notion of “accounts”, whereby each address can belong to specific account, which is credited
      * when bitcoin is sent to that address. However the separation of accounts is not preserved when bitcoin is sent
      * out, because the internal accounting mechanism has no relationship to the bitcoin protocol itself. Because of
@@ -145,17 +96,12 @@ class MultichainClient
      * control whose funds are spent in each transaction. Unlike bitcoin-style accounts, this method maps directly to
      * the blockchain protocol.
      *
-     * @link http://www.multichain.com/developers/json-rpc-api/
+     * @param string $account
+     * @return mixed
      */
-    public function getNewAddress($verbose = true)
+    public function getNewAddress($account = '')
     {
-        $response = $this->jsonRPCClient->execute("getnewaddress");
-        $address = new Address();
-        $address->setHash($response);
-        if ($verbose) {
-            $address = $this->validateAddress($address);
-        }
-        return $address;
+        return $this->jsonRPCClient->execute("getnewaddress", array($account));
     }
 
     /**
@@ -165,30 +111,35 @@ class MultichainClient
      * Use "" as the asset inside this object to specify a quantity of the native blockchain currency. See also
      * sendassettoaddress for sending a single asset and sendfromaddress to control the address whose funds are used.
      *
-     * @param Address $address
-     * @param $amount
+     * @param string $address
+     * @param string $amount
      * @param string $comment
      * @param string $commentTo
+     * @return mixed
      */
-    public function sendToAddress(Address $address, $amount, $comment = '', $commentTo = '')
+    public function sendToAddress($address, $amount, $comment = '', $commentTo = '')
     {
-        // TODO
+        return $this->jsonRPCClient->execute("sendtoaddress", array($address, $amount, $comment, $commentTo));
     }
 
     /**
      * Outputs a list of available API commands, including MultiChain-specific commands.
+     *
+     * @return mixed
      */
     public function help()
     {
-        // TODO
+        return $this->jsonRPCClient->execute("help");
     }
 
     /**
      * Shuts down the this blockchain node, i.e. stops the multichaind process.
+     *
+     * @return mixed
      */
     public function stop()
     {
-        // TODO
+        return $this->jsonRPCClient->execute("stop");
     }
 
     /**
@@ -201,14 +152,15 @@ class MultichainClient
      * be transmitted to the network using sendrawtransaction. If not, it can be passed to a further counterparty, who
      * can call decoderawexchange and appendrawexchange as appropriate.
      *
-     * @param $hexstring
-     * @param $txid
-     * @param $vout
-     * @param $extra
+     * @param $hexString
+     * @param $txId
+     * @param $vOut
+     * @param $extra ({"asset":qty, ...})
+     * @return mixed
      */
-    public function appendRawExchange($hexstring, $txid, $vout, $extra)
+    public function appendRawExchange($hexString, $txId, $vOut, $extra)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("appendrawexchange", array($hexString, $txId, $vOut, $extra));
     }
 
     /**
@@ -218,10 +170,11 @@ class MultichainClient
      *
      * @param $txHex
      * @param $dataHex
+     * @return mixed
      */
     public function appendRawMetadata($txHex, $dataHex)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("appendrawmetadata", array($txHex, $dataHex));
     }
 
     /**
@@ -238,10 +191,11 @@ class MultichainClient
      * @param int $minInputs
      * @param int $maxInputs
      * @param int $maxTime
+     * @return mixed
      */
     public function combineUnspent($addresses = "*", $minConf = 1, $maxCombines = 1, $minInputs = 10, $maxInputs = 100, $maxTime = 30)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("combineunspent", array($addresses, $minConf, $maxCombines, $minInputs, $maxInputs, $maxTime));
     }
 
     /**
@@ -255,10 +209,11 @@ class MultichainClient
      * @param $txId
      * @param $vOut
      * @param $extra
+     * @return mixed
      */
     public function createRawExchange($txId, $vOut, $extra)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("createrawexchange", array($txId, $vOut, $extra));
     }
 
     /**
@@ -274,10 +229,11 @@ class MultichainClient
      *
      * @param $hexString
      * @param bool $verbose
+     * @return mixed
      */
     public function decodeRawExchange($hexString, $verbose = false)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("decoderawexchange", array($hexString, $verbose));
     }
 
     /**
@@ -286,12 +242,12 @@ class MultichainClient
      * be used on an exchange transaction, check the candisable field of the output of decoderawexchange.
      *
      * @param $hexString
+     * @return mixed
      */
-    public function disablerawtransaction($hexString)
+    public function disableRawTransaction($hexString)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("disablerawtransaction", array($hexString));
     }
-
 
     /**
      * Returns a list of all the asset balances for address in this node’s wallet, with at least minconf confirmations.
@@ -300,10 +256,11 @@ class MultichainClient
      * @param $address
      * @param int $minConf
      * @param bool $includeLocked
+     * @return mixed
      */
     public function getAddressBalances($address, $minConf = 1, $includeLocked = false)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("getaddressbalances", array($address, $minConf, $includeLocked));
     }
 
     /**
@@ -311,27 +268,11 @@ class MultichainClient
      * address, formatted like the output of the validateaddress command.
      *
      * @param bool $verbose
-     * @return Address[]
+     * @return mixed
      */
-    public function getAddresses($verbose = true)
+    public function getAddresses($verbose = false)
     {
-        $response = $this->jsonRPCClient->execute("getaddresses", array($verbose));
-        $addresses = array();
-        foreach ($response as $addr) {
-            $address = new Address();
-            if (is_array($addr)) {
-                $address->setHash($addr["address"])
-                    ->setMine($addr["ismine"])
-                    ->setWatchOnly($addr["iswatchonly"])
-                    ->setScript($addr["isscript"])
-                    ->setPubKey($addr["pubkey"])
-                    ->setCompressed($addr["iscompressed"]);
-            } else {
-                $address->setHash($addr);
-            }
-            $addresses[] = $address;
-        }
-        return $addresses;
+        return $this->jsonRPCClient->execute("getaddresses", array($verbose));
     }
 
     /**
@@ -341,10 +282,11 @@ class MultichainClient
      * @param $address
      * @param $txId
      * @param bool $verbose
+     * @return mixed
      */
     public function getAddressTransaction($address, $txId, $verbose = false)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("getaddresstransaction", array($address, $txId, $verbose));
     }
 
     /**
@@ -354,21 +296,24 @@ class MultichainClient
      * e.g. by a call to preparelockunspent.
      *
      * @param string $account
-     * @param int $minconf
+     * @param int $minConf
      * @param bool $includeWatchOnly
      * @param bool $includeLocked
+     * @return mixed
      */
-    public function getAssetBalances($account = "", $minconf = 1, $includeWatchOnly = false, $includeLocked = false)
+    public function getAssetBalances($account = "", $minConf = 1, $includeWatchOnly = false, $includeLocked = false)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("getassetbalances", array($account, $minConf, $includeWatchOnly, $includeLocked));
     }
 
     /**
      * Returns a list of all the parameters of this blockchain, reflecting the content of its params.dat file.
+     *
+     * @return mixed
      */
     public function getBlockchainParams()
     {
-        // TODO
+        return $this->jsonRPCClient->execute("getblockchainparams");
     }
 
     /**
@@ -376,31 +321,79 @@ class MultichainClient
      * includeWatchOnly to include the balance of watch-only addresses and includeLocked to include unspent outputs
      * which have been locked, e.g. by a call to preparelockunspent.
      *
-     * @param int $minconf
+     * @param int $minConf
      * @param bool $includeWatchOnly
      * @param bool $includeLocked
+     * @return mixed
      */
-    public function getTotalBalances($minconf = 1, $includeWatchOnly = false, $includeLocked = false)
+    public function getTotalBalances($minConf = 1, $includeWatchOnly = false, $includeLocked = false)
     {
-        // TODO
+        return $this->jsonRPCClient->execute("getassetbalances", array($minConf, $includeWatchOnly, $includeLocked));
     }
 
     /**
      * Returns information about address including a check for its validity.
      *
-     * @param Address $address
-     * @return Address
+     * @param $address
+     * @return mixed
      */
-    public function validateAddress(Address $address)
+    public function validateAddress($address)
     {
-        $response = $this->jsonRPCClient->execute("validateaddress", array($address->getHash()));
-        $address->setValid($response["isvalid"])
-            ->setMine($response["ismine"])
-            ->setWatchOnly($response["iswatchonly"])
-            ->setScript($response["isscript"])
-            ->setPubKey($response["pubkey"])
-            ->setCompressed($response["iscompressed"]);
-        return $address;
+        return $this->jsonRPCClient->execute("validateaddress", array($address));
+    }
+
+    /**
+     * Provides information about transaction txid in this node’s wallet, including how it affected the node’s total
+     * balance. Use includeWatchOnly to consider watch-only addresses as if they belong to this wallet and verbose to
+     * provide details of transaction inputs and outputs.
+     *
+     * @param $txId
+     * @param bool $includeWatchOnly
+     * @param bool $verbose
+     * @return mixed
+     */
+    public function getWalletTransaction($txId, $includeWatchOnly = false, $verbose = false)
+    {
+        return $this->jsonRPCClient->execute("getwallettransaction", array($txId, $includeWatchOnly, $verbose));
+    }
+
+    /**
+     * Grants permissions to addresses, where addresses is a comma-separated list of addresses and permissions is one
+     * of connect, send, receive, issue, mine, admin, or a comma-separated list thereof. If the chain uses a native
+     * currency, you can send some to each recipient using the native-amount parameter. Returns the txid of the
+     * transaction granting the permissions. For more information, see permissions management.
+     *
+     * @param $addresses
+     * @param $permissions
+     * @param int $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @param int $startBlock
+     * @param null $endBlock
+     * @return mixed
+     */
+    public function grant($addresses, $permissions, $nativeAmount = 0, $comment = '', $commentTo = '', $startBlock = 0, $endBlock = null)
+    {
+        return $this->jsonRPCClient->execute("grant", array($addresses, $permissions, $nativeAmount, $comment, $commentTo, $startBlock, $endBlock));
+    }
+
+    /**
+     * This works like grant, but with control over the from-address used to grant the permissions. If there are
+     * multiple addresses with administrator permissions on one node, this allows control over which address is used.
+     *
+     * @param $fromAddress
+     * @param $toAddresses
+     * @param $permissions
+     * @param int $nativeAmount
+     * @param string $comment
+     * @param string $commentTo
+     * @param int $startBlock
+     * @param null $endBlock
+     * @return mixed
+     */
+    public function grantFrom($fromAddress, $toAddresses, $permissions, $nativeAmount = 0, $comment = '', $commentTo = '', $startBlock = 0, $endBlock = null)
+    {
+        return $this->jsonRPCClient->execute("grantfrom", array($fromAddress, $toAddresses, $nativeAmount, $comment, $commentTo, $startBlock, $endBlock));
     }
 
     /**
@@ -408,62 +401,103 @@ class MultichainClient
      * unit is given by units, e.g. 0.01. If the chain uses a native currency, you can send some with the new asset
      * using the native-amount parameter.
      *
-     * @param Address $address
+     * @param $address
      * @param $name
      * @param $qty
      * @param int $units
      * @param int $nativeAmount
      * @param null $custom
-     * @return Asset
+     * @return mixed
      */
-    public function issue(Address $address, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null)
+    public function issue($address, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null)
     {
-        $params = array($address->getHash(), $name, $qty, $units, $nativeAmount);
-        if (!is_null($custom)) {
+        $params = array($address, $name, $qty, $units, $nativeAmount);
+        if (!is_null($custom)){
             $params[] = $custom;
         }
-        $response = $this->jsonRPCClient->execute("issue", $params);
-        $asset = new Asset();
-        $asset->setIssueTxId($response);
-        $moreinfo = $this->listAssets($asset);
-        if (sizeof($moreinfo) > 0) {
-            $asset = $moreinfo[0];
-        }
-        return $asset;
+        return $this->jsonRPCClient->execute("issue", $params);
     }
 
+    /**
+     * This works like issue, but with control over the from-address used to issue the asset. If there are multiple
+     * addresses with asset issuing permissions on one node, this allows control over which address is used.
+     *
+     * @param $fromAddress
+     * @param $toAddress
+     * @param $name
+     * @param $qty
+     * @param int $units
+     * @param int $nativeAmount
+     * @param null $custom
+     * @return mixed
+     */
+    public function issueFrom($fromAddress, $toAddress, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null)
+    {
+        return $this->jsonRPCClient->execute("issuefrom", array($fromAddress, $toAddress, $name, $qty, $units, $nativeAmount, $custom));
+    }
+
+    /**
+     * Lists information about the count most recent transactions related to address in this node’s wallet, including
+     * how they affected that address’s balance. Use skip to go back further in history and verbose to provide details
+     * of transaction inputs and outputs.
+     *
+     * @param $address
+     * @param int $count
+     * @param int $skip
+     * @param bool $verbose
+     * @return mixed
+     */
+    public function listAddressTransactions($address, $count = 10, $skip = 0, $verbose = false)
+    {
+        return $this->jsonRPCClient->execute("listaddresstransactions", array($address, $count, $skip, $verbose));
+    }
 
     /**
      * Returns information about all assets issued on the blockchain. If an issuance txid
      * (see native assets) is provided in asset, then information is only returned about that one asset.
      *
-     * @param Asset|null $asset
-     * @return Asset[]
+     * @param null $asset
+     * @return mixed
      */
-    public function listAssets(Asset $asset = null)
+    public function listAssets($asset = null)
     {
-        $response = (is_null($asset) ? $this->jsonRPCClient->execute("listassets") : $this->jsonRPCClient->execute("listassets", array($asset->getIssueTxId())));
-        $assets = array();
-        foreach ($response as $asst) {
-            $asset = new Asset();
-            $asset->setIssueTxId($asst["issuetxid"])
-                ->setAssetRef($asst["assetref"])
-                ->setDetails($asst["details"])
-                ->setIssueQty($asst["issueqty"])
-                ->setIssueRaw($asst["issueraw"])
-                ->setMultiple($asst["multiple"])
-                ->setName($asst["name"])
-                ->setUnits($asst["units"]);
-            $assets[] = $asset;
-        }
-        return $assets;
+        return $this->jsonRPCClient->execute("listassets", array($asset));
+    }
+
+    /**
+     * Returns a list of all permissions currently granted to addresses. To list information about specific permissions
+     * only, set permissions to one of connect, send, receive, issue, mine, admin, or a comma-separated list thereof.
+     * Omit or pass all to list all permissions. Provide a comma-delimited list in addresses to list the permissions
+     * for particular addresses only or * for all addresses. If verbose is true, the admins output field lists the
+     * administrator/s who assigned the corresponding permission, and the pending field lists permission changes which
+     * are waiting to reach consensus.
+     *
+     * @param string $permissions
+     * @param string $addresses
+     * @param bool $verbose
+     * @return mixed
+     */
+    public function listPermissions($permissions = "all", $addresses = "*", $verbose = false)
+    {
+        return $this->jsonRPCClient->execute("listpermissions", array($permissions, $addresses, $verbose));
     }
 
 
-    // Lists information about the count most recent transactions in this node’s wallet, including how they affected the node’s total balance. Use skip to go back further in history and includeWatchOnly to consider watch-only addresses as if they belong to this wallet. Use verbose to provide the details of transaction inputs and outputs. Note that unlike Bitcoin Core’s listtransactions command, the response contains one element per transaction, rather than one per transaction output.
-
-    public function listWalletTransactions($count = 10, $skip = 0, $includeWatchOnly = false, $verbose = true)
+    /**
+     * Lists information about the count most recent transactions in this node’s wallet, including how they affected
+     * the node’s total balance. Use skip to go back further in history and includeWatchOnly to consider watch-only
+     * addresses as if they belong to this wallet. Use verbose to provide the details of transaction inputs and outputs.
+     * Note that unlike Bitcoin Core’s listtransactions command, the response contains one element per transaction,
+     * rather than one per transaction output.
+     *
+     * @param int $count
+     * @param int $skip
+     * @param bool $includeWatchOnly
+     * @param bool $verbose
+     * @return mixed
+     */
+    public function listWalletTransactions($count = 10, $skip = 0, $includeWatchOnly = false, $verbose = false)
     {
-        $response = $this->jsonRPCClient->execute("listwallettransactions", array($count, $skip, $includeWatchOnly, $verbose));
+        return $this->jsonRPCClient->execute("listwallettransactions", array($count, $skip, $includeWatchOnly, $verbose));
     }
 }
