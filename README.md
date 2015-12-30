@@ -13,7 +13,7 @@ This library provides a simple way to work with Multichain JsonRPC interface. Th
 
 ## Example usage
 
-    $client = MultichainClient("http://<chainurl>:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3, false);
+    $client = MultichainClient("http://<chainurl>:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3);
     $address = $client->setDebug(true)->getNewAddress();
 
 See more examples and documentation in the tests folder.

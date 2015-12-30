@@ -14,7 +14,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3, false);
+        $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3);
         $this->helper = new MultichainHelper($this->multichain);
     }
 

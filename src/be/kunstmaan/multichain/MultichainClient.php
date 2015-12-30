@@ -43,7 +43,6 @@ class MultichainClient
      * @param  string $username Multichain JSON RPC username
      * @param  string $password Multichain JSON RPC password
      * @param  integer $timeout HTTP timeout
-     * @param bool $debug
      */
     public function __construct($url, $username, $password, $timeout = 3)
     {
