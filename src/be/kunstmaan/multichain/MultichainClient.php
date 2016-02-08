@@ -749,4 +749,17 @@ class MultichainClient
         }
         return $nativeAmount;
     }
+
+    /**
+     * Submits raw transaction (serialized, hex-encoded) to local node and network.
+     * Returns the transaction hash in hex
+     *
+     * @param $hex
+     * @param bool $allowHighFees
+     * @return mixed
+     */
+    public function sendRawTransaction($hex, $allowHighFees = false)
+    {
+        return $this->jsonRPCClient->execute("sendrawtransaction", array($hex, $allowHighFees));
+    }
 }
