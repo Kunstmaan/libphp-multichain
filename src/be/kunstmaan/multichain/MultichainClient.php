@@ -49,7 +49,7 @@ class MultichainClient
         $this->jsonRPCClient = new JsonRPCClient($url, $timeout, $this->headers);
         $this->jsonRPCClient->authentication($username, $password);
     }
-
+    
     /**
      * @param boolean $debug
      * @return MultichainClient
@@ -111,6 +111,17 @@ class MultichainClient
     public function getNewAddress($account = '')
     {
         return $this->jsonRPCClient->execute("getnewaddress", array($account));
+    }
+
+    /**
+     * Returns the private key associated with address in this node’s wallet. Use with caution – any node with access to this
+     * private key can perform any action restricted to the address, including granting permissions and spending funds.
+     *
+     * @param $address
+     * @return mixed
+     */
+    public function dumpPrivateKey($address){
+        return $this->jsonRPCClient->execute("dumpprivkey", array($address));
     }
 
     /**
@@ -396,15 +407,38 @@ class MultichainClient
      * @param int $units
      * @param int $nativeAmount
      * @param null $custom
+     * @param bool $open
      * @return mixed
      */
-    public function issue($address, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null)
+    public function issue($address, $name, $qty, $units = 1, $nativeAmount = 0, $custom = null, $open=false)
     {
-        $params = array($address, $name, $qty, $units, $nativeAmount);
+        $params = array($address, array('name'=>$name, 'open'=>$open), $qty, $units, $nativeAmount);
         if (!is_null($custom)) {
             $params[] = $custom;
         }
         return $this->jsonRPCClient->execute("issue", $params);
+    }
+
+    /**
+     * Issues qty additional units of asset, sending them to address. The asset can be specified using its name, ref or
+     * issuance txid – see native assets for more information. If the chain uses a native currency, you can send some with the
+     * new asset units using the native-amount parameter. Any custom fields will be attached to the new issuance event, and not
+     * affect the original values (use listassets with verbose=true to see both sets). Returns the txid of the issuance
+     * transaction. For more information, see native assets.
+     *
+     * @param $address
+     * @param $asset
+     * @param $qty
+     * @param int $nativeAmount
+     * @param null $custom
+     * @return mixed
+     */
+    public function issueMore($address, $asset, $qty, $nativeAmount=0, $custom = null){
+        $params = array($address, $asset, $qty, $nativeAmount);
+        if (!is_null($custom)) {
+            $params[] = $custom;
+        }
+        return $this->jsonRPCClient->execute("issuemore", $params);
     }
 
     /**
