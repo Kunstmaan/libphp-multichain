@@ -125,6 +125,20 @@ class MultichainClient
     }
 
     /**
+     * Adds the privkey private key (as obtained from a prior call to dumpprivkey) to the wallet, together with its
+     * associated public address. If rescan is true, the entire blockchain is checked for transactions relating to
+     * all addresses in the wallet, including the added one.
+     *
+     * @param $privkey
+     * @param string $label
+     * @param bool $rescan
+     * @return mixed
+     */
+    public function importPrivateKey($privkey, $label="", $rescan=true){
+        return $this->jsonRPCClient->execute("importprivkey", array($privkey, $label, $rescan));
+    }
+
+    /**
      * Sends one or more assets to address, returning the txid. In Bitcoin Core, the amount field is the quantity of
      * the bitcoin currency. For MultiChain, an {"asset":qty, ...} object can be used for amount, in which each asset
      * is an asset name, ref or issuance txid, and each qty is the quantity of that asset to send (see native assets).
