@@ -57,7 +57,9 @@ class MultichainClient
     public function setDebug($debug)
     {
         $this->debug = $debug;
-        $this->jsonRPCClient->debug = $debug;
+        if($debug){
+            $this->jsonRPCClient->getHttpClient()->withDebug();
+        }
         return $this;
     }
 
