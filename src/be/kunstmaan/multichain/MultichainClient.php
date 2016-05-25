@@ -46,10 +46,12 @@ class MultichainClient
      */
     public function __construct($url, $username, $password, $timeout = 3)
     {
-        $this->jsonRPCClient = new JsonRPCClient($url, $timeout, $this->headers);
+        $this->jsonRPCClient = new JsonRPCClient($url);
+        $httpClient = $this->jsonRPCClient->getHttpClient();
+        $httpClient->withHeaders($this->headers);
         $this->jsonRPCClient->authentication($username, $password);
     }
-    
+
     /**
      * @param boolean $debug
      * @return MultichainClient
@@ -58,7 +60,8 @@ class MultichainClient
     {
         $this->debug = $debug;
         if($debug){
-            $this->jsonRPCClient->getHttpClient()->withDebug();
+            $httpClient = $this->jsonRPCClient->getHttpClient();
+            $httpClient->withDebug();
         }
         return $this;
     }
