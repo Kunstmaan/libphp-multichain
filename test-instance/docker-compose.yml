@@ -14,7 +14,7 @@ services:
             - 8002
         environment:
             VIRTUAL_PORT: 8002
-            CHAINNAME: MultiChain
+            CHAINNAME: MyChain
             NETWORK_PORT: 7557
             RPC_PORT: 8002
             RPC_USER: multichainrpc
@@ -38,7 +38,7 @@ services:
             NETWORK_PORT: 7557
             RPC_PORT: 8002
             RPC_USER: multichainrpc
-            RPC_PASSWORD: this-is-insecure-change-it
+            RPC_PASSWORD: multichainrpc
             RPC_ALLOW_IP: 0.0.0.0/0.0.0.0
             MASTER_NODE: masternode
         links:
