@@ -14,7 +14,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->multichain = new MultichainClient("http://sirius.vanderveer.be:8000", 'multichainrpc', '79pgKQusiH3VDVpyzsM6e3kRz6gWNctAwgJvymG3iiuz', 3);
+        $this->multichain = new MultichainClient(getenv('JSON_RPC_URL'), getenv('JSON_RPC_USERNAME'), getenv('JSON_RPC_PASSWORD'), 3);
         $this->helper = new MultichainHelper($this->multichain);
     }
 
@@ -209,10 +209,12 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
         $assetInfo2 = $this->createTestAsset($address1);
         $lock = $this->multichain->prepareLockUnspent(array($assetInfo1["name"] => 123));
         $txHex = $this->multichain->createRawExchange($lock["txid"], $lock["vout"], array($assetInfo2["name"] => 100));
-        $this->multichain->setDebug(true)->appendRawMetadata($txHex, "fakemetadata");
+
+        $this->multichain->setDebug(true)->appendRawMetadata($txHex, "66616b656d65746164617461");
     }
 
     /**
+     * @TODO
      * Sends transactions to combine large groups of unspent outputs (UTXOs) belonging to the same address into a
      * single unspent output, returning a list of txids. This can improve wallet performance, especially for miners in
      * a chain with short block times and non-zero block rewards. Set addresses to a comma-separated list of addresses
@@ -286,7 +288,7 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->multichain->setDebug(true)->getBlockchainParams();
     }
-    
+
     /**
      * Creates a new asset name on the blockchain, sending the initial qty units to address. The smallest transactable
      * unit is given by units, e.g. 0.01. If the chain uses a native currency, you can send some with the new asset
@@ -328,4 +330,37 @@ class MultichainClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->multichain->listWalletTransactions(10, 0, false, false);
     }
+
+    /**
+     * @todo
+     */
+    public function testAddMultisigAddress()
+    {
+
+    }
+
+    /**
+     * @todo
+     */
+    public function testImportAddress()
+    {
+        
+    }
+
+    /**
+     * @todo
+     */
+    public function testListAddresses()
+    {
+        
+    }
+
+    /**
+     * @todo
+     */
+    public function testCreateMultisig()
+    {
+        
+    }
+
 }

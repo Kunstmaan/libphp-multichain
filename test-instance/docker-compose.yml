@@ -1,0 +1,47 @@
+version: '2'
+
+services:
+    # basenode:
+    #     build: ./base
+    #     stdin_open: true
+    #     tty: true
+    masternode:
+        build: ./master
+        stdin_open: true
+        tty: true
+        expose:
+            - 7557
+            - 8002
+        environment:
+            VIRTUAL_PORT: 8002
+            CHAINNAME: MultiChain
+            NETWORK_PORT: 7557
+            RPC_PORT: 8002
+            RPC_USER: multichainrpc
+            RPC_PASSWORD: multichainrpc
+            RPC_ALLOW_IP: 0.0.0.0/0
+            PARAM_TARGET_BLOCK_SIZE: target-block-time|30
+            PARAM_ANYONE_CAN_CONNECT: anyone-can-connect|true
+            PARAM_ANYONE_CAN_MINE: anyone-can-mine|true
+            PARAM_ANYONE_CAN_ISSUE: anyone-can-issue|true
+            PARAM_ANYONE_CAN_RECEIVE: anyone-can-receive|true
+            PARAM_ANYONE_CAN_SEND: anyone-can-send|true
+    slavenode:
+        build: ./node
+        stdin_open: true
+        tty: true
+        expose:
+            - 7557
+            - 8002
+        environment:
+            CHAINNAME: MyChain
+            NETWORK_PORT: 7557
+            RPC_PORT: 8002
+            RPC_USER: multichainrpc
+            RPC_PASSWORD: this-is-insecure-change-it
+            RPC_ALLOW_IP: 0.0.0.0/0.0.0.0
+            MASTER_NODE: masternode
+        links:
+            - masternode
+        depends_on:
+            - masternode

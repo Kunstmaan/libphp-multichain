@@ -1,0 +1,7 @@
+<phpunit>
+    <php>
+        <env name="JSON_RPC_URL" value="http://masternode.mci.docker"/>
+        <env name="JSON_RPC_USERNAME" value="multichainrpc"/>
+        <env name="JSON_RPC_PASSWORD" value="multichainrpc"/>
+    </php>
+</phpunit>
