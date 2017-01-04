@@ -29,6 +29,7 @@ before_install:
   - cd test-instance
   - docker-compose pull
   - docker-compose build
+  - docker-compose-create
   - docker-compose start
   - cd ../
 
@@ -44,3 +45,7 @@ script:
   - JSON_RPC_URL="http://$(docker-machine ip):8002"
   - bin/phpunit --bootstrap vendor/autoload.php tests/ --verbose --colors=always --debug --coverage-clover=coverage.clover
   - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
+
+after_script:
+  - cd test-instance
+  - docker-compose stop
