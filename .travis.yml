@@ -1,5 +1,8 @@
 language: php
 
+services:
+  - docker
+
 sudo: required
 
 cache:
