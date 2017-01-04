@@ -28,9 +28,7 @@ before_install:
 
   - cd test-instance
   - docker-compose pull
-  - docker-compose build
-  - docker-compose create
-  - docker-compose start
+  - docker-compose up --build -d
   - cd ../
 
   - docker ps
