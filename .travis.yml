@@ -27,9 +27,11 @@ before_install:
 
   - docker-compose --version
 
+  - cd test-instance
   - docker-compose pull
   - docker-compose build
   - docker-compose start
+  - cd ../
 
   - docker ps
 
@@ -39,7 +41,7 @@ before_script:
   - COMPOSER_ROOT_VERSION=dev-master composer --prefer-source --dev install
   - wget https://scrutinizer-ci.com/ocular.phar
 
-script: 
-  - JSON_RPC_URL=http://localhost
+script:
+  - JSON_RPC_URL="http://$(docker-machine ip):8002"
   - bin/phpunit --bootstrap vendor/autoload.php tests/ --verbose --colors=always --debug --coverage-clover=coverage.clover
   - php ocular.phar code-coverage:upload --format=php-clover coverage.clover

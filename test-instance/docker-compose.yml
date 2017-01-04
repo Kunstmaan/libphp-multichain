@@ -1,18 +1,17 @@
 version: '2'
 
 services:
-    # basenode:
-    #     build: ./base
-    #     stdin_open: true
-    #     tty: true
     masternode:
         build: ./master
         stdin_open: true
         tty: true
+        ports:
+           - "8002:8002"
         expose:
             - 7557
             - 8002
         environment:
+            VIRTUAL_HOST: mychain.docker
             VIRTUAL_PORT: 8002
             CHAINNAME: MyChain
             NETWORK_PORT: 7557
@@ -39,7 +38,7 @@ services:
             RPC_PORT: 8002
             RPC_USER: multichainrpc
             RPC_PASSWORD: multichainrpc
-            RPC_ALLOW_IP: 0.0.0.0/0.0.0.0
+            RPC_ALLOW_IP: 0.0.0.0/0
             MASTER_NODE: masternode
         links:
             - masternode
